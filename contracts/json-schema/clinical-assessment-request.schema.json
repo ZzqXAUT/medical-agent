@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mednav.local/schemas/clinical-assessment-request-v2.json",
+  "title": "MedNav Clinical Assessment Request v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sessionId",
+    "userId",
+    "currentMessage",
+    "askedQuestions",
+    "questionCount",
+    "effectiveProfile",
+    "effectiveDiseaseHistory",
+    "effectiveCoreConstraints",
+    "historicalSessions"
+  ],
+  "properties": {
+    "sessionId": { "type": "string", "minLength": 1 },
+    "userId": { "type": "string", "minLength": 1 },
+    "currentMessage": { "type": "string", "minLength": 1, "maxLength": 8000 },
+    "previousSymptomCase": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["narrative", "associatedSymptoms", "redFlags", "knownFacts"],
+          "properties": {
+            "narrative": { "type": "string" },
+            "chiefComplaint": { "type": ["string", "null"] },
+            "duration": { "type": ["string", "null"] },
+            "severityScore": { "type": ["integer", "null"], "minimum": 0, "maximum": 10 },
+            "associatedSymptoms": { "type": "array", "items": { "type": "string" } },
+            "redFlags": { "type": "array", "items": { "type": "string" } },
+            "knownFacts": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        { "type": "null" }
+      ]
+    },
+    "askedQuestions": {
+      "type": "array",
+      "maxItems": 3,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "questionCount": { "type": "integer", "minimum": 0, "maximum": 3 },
+    "effectiveProfile": { "type": "object" },
+    "effectiveDiseaseHistory": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "effectiveCoreConstraints": { "type": "object" },
+    "historicalSessions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sessionId",
+          "preliminaryDiseases",
+          "summary",
+          "createdAt"
+        ],
+        "properties": {
+          "sessionId": { "type": "string", "minLength": 1 },
+          "symptoms": { "type": ["object", "null"] },
+          "preliminaryDiseases": {
+            "type": "array",
+            "maxItems": 3,
+            "items": { "type": "string" }
+          },
+          "summary": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  }
+}

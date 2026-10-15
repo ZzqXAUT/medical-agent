@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mednav.local/schemas/location-route-v1.json",
+  "title": "MedNav location and route context v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "taskId",
+    "conversationId",
+    "contextVersion",
+    "locationRevision",
+    "clinicalRevision",
+    "status",
+    "joinReady"
+  ],
+  "properties": {
+    "taskId": { "type": "string", "format": "uuid" },
+    "conversationId": { "type": "string", "format": "uuid" },
+    "contextVersion": { "type": "integer", "minimum": 0 },
+    "locationRevision": { "type": "integer", "minimum": 0 },
+    "clinicalRevision": { "type": "integer", "minimum": 0 },
+    "status": {
+      "enum": ["NOT_REQUESTED", "RUNNING", "READY", "DENIED", "INVALID", "FAILED"]
+    },
+    "location": {
+      "oneOf": [
+        { "$ref": "#/$defs/location" },
+        { "type": "null" }
+      ]
+    },
+    "routeMatrix": {
+      "oneOf": [
+        { "$ref": "#/$defs/routeMatrix" },
+        { "type": "null" }
+      ]
+    },
+    "errorCode": { "type": ["string", "null"] },
+    "joinReady": { "type": "boolean" }
+  },
+  "$defs": {
+    "geoPoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["latitude", "longitude"],
+      "properties": {
+        "latitude": { "type": "number", "minimum": -90, "maximum": 90 },
+        "longitude": { "type": "number", "minimum": -180, "maximum": 180 }
+      }
+    },
+    "location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "point",
+        "formattedAddress",
+        "city",
+        "state",
+        "countryCode",
+        "source",
+        "resolvedAt"
+      ],
+      "properties": {
+        "point": { "$ref": "#/$defs/geoPoint" },
+        "formattedAddress": { "type": "string", "minLength": 1 },
+        "city": { "type": "string", "minLength": 1 },
+        "state": { "type": "string", "pattern": "^[A-Z]{2}$" },
+        "postalCode": { "type": ["string", "null"] },
+        "countryCode": { "const": "US" },
+        "placeId": { "type": ["string", "null"] },
+        "source": { "enum": ["BROWSER", "MANUAL"] },
+        "resolvedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "routeMeasure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["distanceMiles", "durationMinutes"],
+      "properties": {
+        "distanceMiles": { "type": "number", "minimum": 0 },
+        "durationMinutes": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "hospitalRoute": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["snapshotId", "hospitalId", "calculatedAt", "status"],
+      "properties": {
+        "snapshotId": { "type": "string", "format": "uuid" },
+        "hospitalId": { "type": "string", "pattern": "^[0-9A-Z]{6}$" },
+        "drive": { "oneOf": [{ "$ref": "#/$defs/routeMeasure" }, { "type": "null" }] },
+        "transit": { "oneOf": [{ "$ref": "#/$defs/routeMeasure" }, { "type": "null" }] },
+        "walk": { "oneOf": [{ "$ref": "#/$defs/routeMeasure" }, { "type": "null" }] },
+        "calculatedAt": { "type": "string", "format": "date-time" },
+        "status": { "enum": ["SUCCESS", "NO_ROUTE", "FAILED"] }
+      }
+    },
+    "routeMatrix": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hospitalCount",
+        "routeElementCount",
+        "batchCount",
+        "cacheHits",
+        "cacheMisses",
+        "routes"
+      ],
+      "properties": {
+        "snapshotId": { "type": ["string", "null"], "format": "uuid" },
+        "hospitalCount": { "type": "integer", "minimum": 0 },
+        "routeElementCount": { "type": "integer", "minimum": 0 },
+        "batchCount": { "type": "integer", "minimum": 0 },
+        "cacheHits": { "type": "integer", "minimum": 0 },
+        "cacheMisses": { "type": "integer", "minimum": 0 },
+        "routes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/hospitalRoute" }
+        }
+      }
+    }
+  }
+}

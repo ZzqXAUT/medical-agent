@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mednav.local/schemas/clinical-decision-v1.json",
+  "title": "MedNav Clinical Decision v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "decision",
+    "missingInformation",
+    "readinessConfidence",
+    "symptomCase",
+    "hypotheses"
+  ],
+  "properties": {
+    "decision": {
+      "enum": ["ASK_USER", "READY", "READY_LIMITED", "INSUFFICIENT_INFORMATION"]
+    },
+    "missingInformation": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["field", "reason", "priority"],
+        "properties": {
+          "field": { "type": "string", "minLength": 1 },
+          "reason": { "type": "string", "minLength": 1 },
+          "priority": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "proposedQuestion": { "type": ["string", "null"] },
+    "readinessConfidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "symptomCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "narrative",
+        "associatedSymptoms",
+        "redFlags",
+        "knownFacts"
+      ],
+      "properties": {
+        "narrative": { "type": "string" },
+        "chiefComplaint": { "type": ["string", "null"] },
+        "duration": { "type": ["string", "null"] },
+        "severityScore": { "type": ["integer", "null"], "minimum": 0, "maximum": 10 },
+        "associatedSymptoms": { "type": "array", "items": { "type": "string" } },
+        "redFlags": { "type": "array", "items": { "type": "string" } },
+        "knownFacts": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "hypotheses": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "severity",
+          "estimatedProbability",
+          "supportingFacts",
+          "limitations",
+          "targetSpecialties"
+        ],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "severity": { "enum": ["MILD", "MODERATE", "SEVERE"] },
+          "estimatedProbability": { "type": "number", "minimum": 0, "maximum": 1 },
+          "supportingFacts": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string" }
+          },
+          "limitations": { "type": "array", "items": { "type": "string" } },
+          "targetSpecialties": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

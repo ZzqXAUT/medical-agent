@@ -1,0 +1,5 @@
+mednav:
+  agent:
+    mode: openai
+  maps:
+    mode: google

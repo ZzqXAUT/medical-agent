@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mednav.local/schemas/agent-event-v1.json",
+  "title": "MedNav Agent Event v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "eventId",
+    "type",
+    "conversationId",
+    "sessionId",
+    "runId",
+    "sequence",
+    "timestamp"
+  ],
+  "properties": {
+    "eventId": { "type": "string", "format": "uuid" },
+    "type": {
+      "enum": [
+        "RUN_STARTED",
+        "TEXT_MESSAGE_START",
+        "TEXT_MESSAGE_CONTENT",
+        "TEXT_MESSAGE_END",
+        "RUN_FINISHED",
+        "RUN_ERROR",
+        "AUTH_SECRET_REQUEST",
+        "AUTH_RESULT",
+        "PROFILE_UPDATED",
+        "PIPELINE_PROGRESS",
+        "CLINICAL_QUESTION",
+        "CLINICAL_RESULT",
+        "LOCATION_STATUS",
+        "ROUTE_MATRIX_RESULT",
+        "NAVIGATION_CONTEXT_READY",
+        "RECOMMENDATION_RESULT",
+        "LOCAL_REPAIR_PROGRESS",
+        "VALIDATION_FINDING",
+        "SESSION_COMPLETED"
+      ]
+    },
+    "conversationId": { "type": "string", "format": "uuid" },
+    "sessionId": { "type": "string", "format": "uuid" },
+    "runId": { "type": "string", "format": "uuid" },
+    "messageId": { "type": "string" },
+    "sequence": { "type": "integer", "minimum": 1 },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "delta": { "type": "string" },
+    "content": { "type": "string" },
+    "errorCode": { "type": "string" },
+    "data": { "type": "object" }
+  }
+}

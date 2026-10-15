@@ -1,0 +1,79 @@
+{
+  "testId": "mednav-local-stub-200qps-2026-09-24",
+  "slo": {
+    "targetQps": 200,
+    "admissionP99MsLessThan": 500,
+    "processingP99MsLessThan": 500,
+    "errorRatePercentLessThan": 1
+  },
+  "environment": {
+    "os": "Microsoft Windows 10.0.26200",
+    "logicalProcessors": 20,
+    "java": "19.0.2",
+    "node": "22.18.0",
+    "applicationInstances": 1,
+    "loadGeneratorPlacement": "same host",
+    "clinicalModel": "stub",
+    "maps": "stub",
+    "postgresql": "real local PostgreSQL 16",
+    "redis": "real local Redis 7",
+    "loggingLevel": "WARN"
+  },
+  "workload": {
+    "endpoint": "POST /api/conversations/{conversationId}/runs",
+    "sessions": 100,
+    "durationSecondsPerRun": 60,
+    "repeatCount": 3,
+    "requestsPerRun": 12000,
+    "totalRequests": 36000,
+    "completionSignal": "SSE RUN_FINISHED",
+    "drainTimeoutSeconds": 120
+  },
+  "runs": [
+    {
+      "run": 1,
+      "achievedQps": 200,
+      "accepted": 12000,
+      "completed": 12000,
+      "admissionAverageMs": 18.90,
+      "admissionP95Ms": 30.41,
+      "admissionP99Ms": 331.44,
+      "processingAverageMs": 28.06,
+      "processingP95Ms": 37.83,
+      "processingP99Ms": 478.05,
+      "errorRatePercent": 0
+    },
+    {
+      "run": 2,
+      "achievedQps": 200,
+      "accepted": 12000,
+      "completed": 12000,
+      "admissionAverageMs": 9.75,
+      "admissionP95Ms": 12.79,
+      "admissionP99Ms": 22.47,
+      "processingAverageMs": 14.31,
+      "processingP95Ms": 19.18,
+      "processingP99Ms": 32.58,
+      "errorRatePercent": 0
+    },
+    {
+      "run": 3,
+      "achievedQps": 200,
+      "accepted": 12000,
+      "completed": 12000,
+      "admissionAverageMs": 18.25,
+      "admissionP95Ms": 27.43,
+      "admissionP99Ms": 270.62,
+      "processingAverageMs": 24.69,
+      "processingP95Ms": 35.51,
+      "processingP99Ms": 418.64,
+      "errorRatePercent": 0
+    }
+  ],
+  "worstObserved": {
+    "admissionP99Ms": 331.44,
+    "processingP99Ms": 478.05,
+    "errorRatePercent": 0
+  },
+  "result": "PASS"
+}

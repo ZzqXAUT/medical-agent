@@ -1,0 +1,633 @@
+openapi: 3.1.0
+info:
+  title: MedNav API
+  version: 0.8.2
+  description: M8 Conversation、认证画像、临床判断、定位推荐、Session Memory 与会话历史契约。
+servers:
+  - url: http://localhost:8080
+paths:
+  /api/conversations:
+    post:
+      operationId: createConversation
+      responses:
+        "201":
+          description: Conversation created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Conversation"
+  /api/conversations/{conversationId}/runs:
+    post:
+      operationId: createRun
+      parameters:
+        - $ref: "#/components/parameters/ConversationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRunRequest"
+      responses:
+        "202":
+          description: Run accepted into the Session queue
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RunAccepted"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/conversations/{conversationId}/events:
+    get:
+      operationId: streamEvents
+      parameters:
+        - $ref: "#/components/parameters/ConversationId"
+      responses:
+        "200":
+          description: Server-sent Agent events
+          content:
+            text/event-stream:
+              schema:
+                $ref: "#/components/schemas/AgentEvent"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/conversations/{conversationId}/complete:
+    post:
+      operationId: completeConversation
+      parameters:
+        - $ref: "#/components/parameters/ConversationId"
+      responses:
+        "200":
+          description: Session completed and staged profile/clinical/summary Memory committed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConversationCompletion"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/MemoryCacheUnavailable"
+  /api/auth/conversation/login:
+    post:
+      operationId: loginConversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthSecretSubmission"
+      responses:
+        "200":
+          description: Conversation authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthConversationResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "503":
+          $ref: "#/components/responses/MemoryCacheUnavailable"
+  /api/auth/conversation/register:
+    post:
+      operationId: registerConversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthSecretSubmission"
+      responses:
+        "200":
+          description: Account created and conversation authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthConversationResponse"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "503":
+          $ref: "#/components/responses/MemoryCacheUnavailable"
+  /api/users/me/profile:
+    get:
+      operationId: getCurrentUserProfile
+      parameters:
+        - name: X-Conversation-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Effective profile, including uncommitted Session changes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/MemoryCacheUnavailable"
+  /api/users/me/session-memories:
+    get:
+      operationId: listCurrentUserSessionMemories
+      parameters:
+        - name: X-Conversation-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Finalized Session symptom summaries ordered newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SessionMemory"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/MemoryCacheUnavailable"
+  /api/users/me/session-memories/{sessionId}:
+    delete:
+      operationId: deleteCurrentUserSessionMemory
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: X-Conversation-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Session Memory deleted
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "503":
+          $ref: "#/components/responses/MemoryCacheUnavailable"
+  /api/users/me/sessions:
+    get:
+      operationId: listCurrentUserSessions
+      parameters:
+        - $ref: "#/components/parameters/AuthenticatedConversationId"
+      responses:
+        "200":
+          description: Current user's Sessions ordered by last activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserSession"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      operationId: createAuthenticatedSession
+      parameters:
+        - $ref: "#/components/parameters/AuthenticatedConversationId"
+      responses:
+        "200":
+          description: A new authenticated Session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Conversation"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /api/users/me/sessions/{sessionId}/messages:
+    get:
+      operationId: listSessionMessages
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+        - $ref: "#/components/parameters/AuthenticatedConversationId"
+      responses:
+        "200":
+          description: Persisted user and Agent messages ordered by sequence
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ConversationMessage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/users/me/sessions/{sessionId}/resume:
+    post:
+      operationId: resumeSession
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+        - $ref: "#/components/parameters/AuthenticatedConversationId"
+      responses:
+        "200":
+          description: Existing active Session reattached within the idle window
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Conversation"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /api/location/consent:
+    post:
+      operationId: submitBrowserLocationConsent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocationConsentRequest"
+      responses:
+        "202":
+          description: Browser location task accepted, or denial recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LocationTaskAccepted"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /api/location/manual:
+    post:
+      operationId: submitManualLocation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ManualLocationRequest"
+      responses:
+        "202":
+          description: Manual geocoding and route task accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LocationTaskAccepted"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /api/navigation/runs/{taskId}:
+    get:
+      operationId: getNavigationRun
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: X-Conversation-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Current location task, route matrix and Join readiness
+          content:
+            application/json:
+              schema:
+                $ref: "../json-schema/location-route.schema.json"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/navigation/runs/{taskId}/results:
+    get:
+      operationId: getNavigationRecommendation
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: X-Conversation-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Current M6 recommendation status and verified result when ready
+          content:
+            application/json:
+              schema:
+                $ref: "../json-schema/navigation-recommendation.schema.json"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+components:
+  parameters:
+    ConversationId:
+      name: conversationId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    AuthenticatedConversationId:
+      name: X-Conversation-Id
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    SessionId:
+      name: sessionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    NotFound:
+      description: Conversation not found
+      content:
+        application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+    Unauthorized:
+      description: Authentication required or credentials invalid
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
+    Conflict:
+      description: Authentication challenge expired or username conflict
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
+    MemoryCacheUnavailable:
+      description: Redis-backed Session Memory is temporarily unavailable; retry is safe
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
+  schemas:
+    Conversation:
+      type: object
+      required: [conversationId, sessionId, createdAt]
+      properties:
+        conversationId:
+          type: string
+          format: uuid
+        sessionId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+    CreateRunRequest:
+      type: object
+      additionalProperties: false
+      required: [message]
+      properties:
+        message:
+          type: string
+          minLength: 1
+          maxLength: 8000
+    RunAccepted:
+      type: object
+      required: [runId, conversationId, sessionId, status, acceptedAt]
+      properties:
+        runId:
+          type: string
+          format: uuid
+        conversationId:
+          type: string
+          format: uuid
+        sessionId:
+          type: string
+          format: uuid
+        status:
+          const: QUEUED
+        acceptedAt:
+          type: string
+          format: date-time
+    AuthSecretSubmission:
+      type: object
+      additionalProperties: false
+      required: [conversationId, requestId, password]
+      properties:
+        conversationId:
+          type: string
+          format: uuid
+        requestId:
+          type: string
+          format: uuid
+        password:
+          type: string
+          minLength: 8
+          maxLength: 100
+          writeOnly: true
+    AuthConversationResponse:
+      type: object
+      required: [runId, conversationId, userId, username, newUser, status]
+      properties:
+        runId:
+          type: string
+          format: uuid
+        conversationId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+        username:
+          type: string
+        newUser:
+          type: boolean
+        status:
+          const: AUTHENTICATED
+    ConversationCompletion:
+      type: object
+      required: [conversationId, sessionId, status, profilePersisted, completedAt]
+      properties:
+        conversationId:
+          type: string
+          format: uuid
+        sessionId:
+          type: string
+          format: uuid
+        status:
+          const: COMPLETED
+        profilePersisted:
+          type: boolean
+        completedAt:
+          type: string
+          format: date-time
+    UserProfile:
+      type: object
+      required: [userId, profile, hasUncommittedSessionUpdates]
+      properties:
+        userId:
+          type: string
+        profile:
+          type: object
+          additionalProperties: true
+        updatedAt:
+          type: string
+          format: date-time
+        hasUncommittedSessionUpdates:
+          type: boolean
+    SessionMemory:
+      type: object
+      additionalProperties: false
+      required: [sessionId, preliminaryDiseases, summary, createdAt]
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        symptoms:
+          type: object
+          additionalProperties: true
+        preliminaryDiseases:
+          type: array
+          maxItems: 3
+          items:
+            type: string
+        summary:
+          type: string
+          description: Session context summary; disease names remain preliminary hypotheses.
+        createdAt:
+          type: string
+          format: date-time
+    UserSession:
+      type: object
+      additionalProperties: false
+      required: [sessionId, conversationId, title, status, resumable, createdAt, lastActivityAt]
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        conversationId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        status:
+          enum: [ACTIVE, COMPLETED]
+        resumable:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        lastActivityAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+    ConversationMessage:
+      type: object
+      additionalProperties: false
+      required: [id, role, content, messageType, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        role:
+          enum: [USER, ASSISTANT, SYSTEM]
+        content:
+          type: string
+        messageType:
+          enum: [TEXT, RECOMMENDATION_RESULT]
+        structuredPayload:
+          $ref: "../json-schema/navigation-recommendation.schema.json#/$defs/result"
+        createdAt:
+          type: string
+          format: date-time
+    AgentEvent:
+      $ref: "../json-schema/agent-event.schema.json"
+    ClinicalDecision:
+      $ref: "../json-schema/clinical-decision.schema.json"
+    CmsSnapshotImportResult:
+      $ref: "../json-schema/cms-snapshot.schema.json"
+    CmsProviderQuery:
+      $ref: "../json-schema/cms-provider-query.schema.json"
+    LocationConsentRequest:
+      type: object
+      additionalProperties: false
+      required: [conversationId, granted]
+      properties:
+        conversationId:
+          type: string
+          format: uuid
+        granted:
+          type: boolean
+        latitude:
+          type: number
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: number
+          minimum: -180
+          maximum: 180
+    ManualLocationRequest:
+      type: object
+      additionalProperties: false
+      required: [conversationId, address]
+      properties:
+        conversationId:
+          type: string
+          format: uuid
+        address:
+          type: string
+          minLength: 1
+          maxLength: 500
+    LocationTaskAccepted:
+      type: object
+      additionalProperties: false
+      required: [taskId, conversationId, locationRevision, status, acceptedAt]
+      properties:
+        taskId:
+          type: string
+          format: uuid
+        conversationId:
+          type: string
+          format: uuid
+        locationRevision:
+          type: integer
+          minimum: 1
+        status:
+          enum: [RUNNING, DENIED]
+        acceptedAt:
+          type: string
+          format: date-time
+    NavigationRun:
+      $ref: "../json-schema/location-route.schema.json"
+    NavigationRecommendation:
+      $ref: "../json-schema/navigation-recommendation.schema.json"
+    ApiError:
+      type: object
+      required: [code, message, timestamp]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time

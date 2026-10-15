@@ -1,0 +1,6 @@
+{"caseId":"m1-conversation-create","module":"conversation-api","input":{},"expected":{"httpStatus":201,"hasConversationId":true,"hasSessionId":true},"tags":["normal","deterministic"],"datasetVersion":"m1-v0"}
+{"caseId":"m1-run-empty-rejected","module":"run-api","input":{"message":""},"expected":{"httpStatus":400,"errorCode":"VALIDATION_ERROR"},"tags":["invalid","deterministic"],"datasetVersion":"m1-v0"}
+{"caseId":"m1-session-serial","module":"session-run-scheduler","input":{"sessionIds":["same","same","same"]},"expected":{"maxConcurrentPerSession":1,"preservesSubmissionOrder":true},"tags":["concurrency","deterministic"],"datasetVersion":"m1-v0"}
+{"caseId":"m1-cross-session-parallel","module":"session-run-scheduler","input":{"sessionIds":["a","b"]},"expected":{"minimumGlobalConcurrency":2},"tags":["concurrency","deterministic"],"datasetVersion":"m1-v0"}
+{"caseId":"m1-stub-event-order","module":"stub-agent","input":{"message":"I have a headache"},"expected":{"eventTypes":["RUN_STARTED","TEXT_MESSAGE_START","TEXT_MESSAGE_CONTENT","TEXT_MESSAGE_END","RUN_FINISHED"]},"tags":["normal","contract"],"datasetVersion":"m1-v0"}
+

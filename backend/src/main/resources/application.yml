@@ -1,0 +1,88 @@
+spring:
+  application:
+    name: mednav-backend
+  config:
+    import: optional:file:./application-secrets.yml
+  profiles:
+    default: local
+  datasource:
+    url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/mednav}
+    username: ${POSTGRES_USER:mednav}
+    password: ${POSTGRES_PASSWORD:mednav_local}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  flyway:
+    enabled: true
+  jackson:
+    default-property-inclusion: non_null
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-components: always
+      show-details: always
+
+mednav:
+  auth:
+    bcrypt-strength: ${BCRYPT_STRENGTH:12}
+  agent:
+    mode: stub
+    stub-delay: 25ms
+  model:
+    api-key: ${OPENAI_API_KEY:}
+    base-url: ${OPENAI_BASE_URL:}
+    primary: ${PRIMARY_MODEL:}
+    summary: ${SUMMARY_MODEL:}
+    semantic-verification: ${VERIFICATION_MODEL:}
+    semantic-verification-enabled: ${SEMANTIC_VERIFICATION_ENABLED:true}
+    reasoning-effort: ${OPENAI_REASONING_EFFORT:none}
+    native-structured-output: ${OPENAI_NATIVE_STRUCTURED_OUTPUT:false}
+  clinical:
+    max-questions: 3
+    readiness-threshold: 0.60
+    prompt-version: clinical-v1
+    model-timeout: 45s
+    model-max-attempts: 2
+    temperature: 0.2
+    max-completion-tokens: 1800
+  recommendation:
+    max-verification-rounds: 3
+    semantic-verification-enabled: ${SEMANTIC_VERIFICATION_ENABLED:true}
+    semantic-threshold: ${SEMANTIC_VERIFICATION_THRESHOLD:65}
+  memory:
+    cache: ${MEMORY_CACHE:redis}
+    user-cache-ttl: ${MEMORY_USER_CACHE_TTL:10m}
+    idle-timeout: ${SESSION_IDLE_TIMEOUT:10m}
+    idle-scan-ms: ${SESSION_IDLE_SCAN_MS:60000}
+  maps:
+    mode: ${MAPS_MODE:stub}
+    api-key: ${GOOGLE_MAPS_API_KEY:}
+    geocoding-url: ${GOOGLE_GEOCODING_URL:https://maps.googleapis.com/maps/api/geocode/json}
+    routes-url: ${GOOGLE_ROUTES_URL:https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix}
+    connect-timeout: ${GOOGLE_CONNECT_TIMEOUT:10s}
+    request-timeout: ${GOOGLE_REQUEST_TIMEOUT:30s}
+    route:
+      batch-size: ${GOOGLE_ROUTE_BATCH_SIZE:100}
+      max-concurrency: ${GOOGLE_ROUTE_MAX_CONCURRENCY:3}
+      cache-ttl: ${GOOGLE_ROUTE_CACHE_TTL:10m}
+      parameters-version: ${GOOGLE_ROUTE_PARAMETERS_VERSION:route-v1}
+  cms:
+    refresh-enabled: ${CMS_REFRESH_ENABLED:true}
+    import-local-on-startup: ${CMS_IMPORT_LOCAL_ON_STARTUP:false}
+    data-dir: ${CMS_DATA_DIR:../dataset}
+    metastore-base-url: ${CMS_METASTORE_BASE_URL:https://data.cms.gov/provider-data/api/1/metastore/schemas/dataset/items}
+    connect-timeout: 10s
+    request-timeout: 2m
+    lock-lease: ${CMS_LOCK_LEASE:30m}
+    batch-size: ${CMS_BATCH_SIZE:1000}
+    min-affiliation-join-rate: ${CMS_MIN_AFFILIATION_JOIN_RATE:0.10}

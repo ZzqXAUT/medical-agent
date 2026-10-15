@@ -1,0 +1,31 @@
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+application-secrets.yml
+
+# Java / Maven
+backend/target/
+backend/.mvn/apache-maven-*/
+backend/.mvn/repository/
+backend/.mvn/*-bin.zip
+backend/.mvn/*-bin.tar.gz
+*.log
+
+# Node
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+*.tsbuildinfo
+
+# Runtime data
+runtime-data/
+evaluation/reports/*.json
+evaluation/reports/*.html
